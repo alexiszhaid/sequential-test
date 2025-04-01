@@ -26,5 +26,5 @@ This project includes:
 
 - 📧 Email: alexiszcg@gmail.com  
 - 🧠 GitHub: [@alexiszhaid](https://github.com/alexiszhaid)  
-- 📘 LinkedIn: [Alexis Zhaid](https://www.linkedin.com/in/alexis-zhaid-carrillo-garc%C3%ADa-2b01ba205/))  
+- 📘 LinkedIn: [Alexis Zhaid](https://www.linkedin.com/in/alexis-zhaid-carrillo-garc%C3%ADa-2b01ba205/)  
 - 📍 Location: Mexico
