@@ -1,0 +1,107 @@
+---
+title: "Sequential tests"
+author: "Alexis Zhaid Carrillo García"
+date: "2025-04-01"
+output: html_document
+bibliography: references.bib
+csl: APA.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Scope and Application
+
+Sequential tests are a method to reduce the number of sensory evaluations required to reach a decision, such as the acceptance or rejection of a trainee panelist, or the approval or rejection of a product batch. Unlike previous discrimination tests, where the number of judgments (*n*) is fixed and the objective is to minimize the type II error (*β*) for a given *α*, sequential tests require setting both *α* and *β* beforehand, and then determine *n* based on the ongoing test results.
+
+These tests are efficient and practical, as they consider the possibility that the evidence from the first few evaluations may be sufficient to draw a conclusion—saving time and resources. Sequential methods can reduce the number of evaluations needed by up to 50%.
+
+The approach is valid for difference tests with a correct/incorrect answer structure, such as the triangle test, two-out-of-five, or duo–trio tests.
+
+# Principle of the Test
+
+A series of evaluations is conducted using a selected discrimination method. After each evaluation, the result is plotted on a graph with three regions:
+
+- **Acceptance region**
+- **Rejection region**
+- **Continue-testing region**
+
+The horizontal axis (*x*) represents the number of tests conducted, and the vertical axis (*y*) shows the cumulative number of correct responses.
+
+- If the first response is correct, plot the point (1,1); if incorrect, plot (1,0).
+- For each subsequent test, increment *x* by 1. If the response is correct, increment *y* by 1; otherwise, *y* remains unchanged.
+- Testing continues until a point crosses one of the decision boundaries. At that moment, a conclusion is reached: either accept or reject the null hypothesis (no difference between samples) [@meilgaard2015sensory].
+
+# Example in R
+
+The following example simulates a sequential triangle test with assumed values of α = 0.05 and β = 0.20
+
+If you already have the results of a sequential test (i.e., whether each panelist gave a correct or incorrect response), you can manually create the input data. You only need a vector of 1s and 0s, where:
+
+1 = correct response
+
+0 = incorrect response
+
+```{r, eval=FALSE}
+
+answers <- c(1, 0, 1, 1, 0, 1, 0, 1, 1, 0)
+
+n <- 1:length(answers)
+correct <- cumsum(answers)
+
+data <- data.frame(Trial = n, Correct = correct)
+```
+
+
+```{r, warning=FALSE}
+# Test parameters
+alpha <- 0.05
+beta <- 0.20
+p0 <- 1/3 
+p1 <- 2/3
+
+set.seed(343)
+answers <- sample(c(1, 0), size = 15, replace = TRUE, prob = c(p1, 1 - p1))
+
+n <- 1:length(answers)
+correct <- cumsum(answers)
+data <- data.frame(Trial = n, Correct = correct)
+
+# Calculate limits
+log_term <- log(p1) - log(p0) - log(1 - p1) + log(1 - p0)
+lower_limits <- (log(beta) - log(1 - alpha) - (n * log(1 - p1)) + (n * log(1 - p0))) / log_term
+upper_limits <- (log(1 - beta) - log(alpha) - (n * log(1 - p1)) + (n * log(1 - p0))) / log_term
+limites <- data.frame(Trial = n, Lower = lower_limits, Upper = upper_limits)
+
+library(ggplot2)
+ggplot() +
+  geom_line(data = data, aes(x = Trial, y = Correct), color = "blue", size = 1.2) +
+  geom_point(data = data, aes(x = Trial, y = Correct), color = "blue", size = 2) +
+  geom_line(data = limites, aes(x = Trial, y = Lower), color = "green", linetype = "dashed") +
+  geom_line(data = limites, aes(x = Trial, y = Upper), color = "red", linetype = "dashed") +
+  labs(
+    title = "Sequential Triangle Test",
+    x = "Number of Trials",
+    y = "Cumulative Correct Responses"
+  ) +
+  scale_x_continuous(breaks = seq(1, max(data$Trial), by = 1)) +
+  scale_y_continuous(breaks = seq(0, max(data$Correct, limites$Upper, na.rm = TRUE), by = 1)) +
+  annotate("text", x = 28, y = max(upper_limits), label = "Reject H0", color = "red") +
+  annotate("text", x = 28, y = min(lower_limits), label = "Accept H0", color = "green") +
+  theme_minimal()
+```
+
+This visualization shows:
+
+Blue line and dots: Accumulated correct responses as the test progresses.
+
+Green dashed line: Lower limit. If the blue line falls below this → Accept H₀ (no difference).
+
+Red dashed line: Upper limit. If the blue line rises above this → Reject H₀ (difference exists).
+
+Middle region: Keep testing until one of the boundaries is crossed.
+
+In this particular example, we observe that at the eleventh trial, the cumulative correct responses cross the upper decision boundary. This indicates sufficient evidence to reject the null hypothesis, allowing us to stop the test at this point and avoid unnecessary use of resources in subsequent evaluations.
+
+## References
